@@ -76,7 +76,7 @@ let
   codecsAttrs = builtins.fromJSON
     (builtins.readFile (../meta + "/${pname}-codecs.json"));
 
-  codecs = stdenv.mkDerivation rec {
+  codecs = stdenv.mkDerivation {
     pname = "chromium-codecs-ffmpeg-extra";
     version = codecsAttrs.version;
 
