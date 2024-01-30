@@ -54,6 +54,18 @@
 , xxd
 , makeWrapper
 , extensions ? [ ]
+
+# For GPU acceleration support on Wayland (without the lib it doesn't seem to work)
+, libGL
+
+# For video acceleration via VA-API (--enable-features=VaapiVideoDecoder,VaapiVideoEncoder)
+, libvaSupport ? stdenv.isLinux
+, enableVideoAcceleration ? libvaSupport
+
+# For Vulkan support (--enable-features=Vulkan); disabled by default as it seems to break VA-API
+, vulkanSupport ? false
+, addOpenGLRunpath
+, enableVulkan ? vulkanSupport
 }:
 
 let
@@ -173,6 +185,13 @@ stdenv.mkDerivation rec {
     gst_all_1.gstreamer
     gst_all_1.gst-plugins-bad
     gst_all_1.gst-libav
+
+    alsa-lib at-spi2-atk at-spi2-core atk cairo cups dbus expat
+    fontconfig freetype gdk-pixbuf glib gtk3 libdrm libX11 libGL
+    libXScrnSaver libXcomposite libXcursor libXdamage
+    libXext libXfixes libXi libXrandr libXrender libxshmfence
+    libXtst libuuid mesa nspr nss pango
+    xorg.libxcb snappy
   ];
 
   unpackPhase = ''
