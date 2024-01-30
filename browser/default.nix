@@ -179,6 +179,7 @@ stdenv.mkDerivation rec {
     libxshmfence
     mesa
     nspr
+    nss
     pango
     stdenv.cc.cc.lib
     gst_all_1.gstreamer
