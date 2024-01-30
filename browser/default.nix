@@ -179,19 +179,14 @@ stdenv.mkDerivation rec {
     libxshmfence
     mesa
     nspr
-    nss
     pango
     stdenv.cc.cc.lib
     gst_all_1.gstreamer
     gst_all_1.gst-plugins-bad
     gst_all_1.gst-libav
-
-    alsa-lib at-spi2-atk at-spi2-core atk cairo cups dbus expat
-    fontconfig freetype gdk-pixbuf glib gtk3 libdrm libX11 libGL
-    libXScrnSaver libXcomposite libXcursor libXdamage
-    libXext libXfixes libXi libXrandr libXrender libxshmfence
-    libXtst libuuid mesa nspr nss pango
-    xorg.libxcb snappy
+    fontconfig
+    libGL
+    xorg.libxcb
   ];
 
   unpackPhase = ''
