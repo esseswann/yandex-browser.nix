@@ -69,6 +69,7 @@
 }:
 
 let
+  inherit (lib) optionalString;
   desktopName = if pname == "yandex-browser-stable" then "yandex-browser" else pname;
   folderName = if pname == "yandex-browser-stable" then "browser" else "browser-beta";
   binName = desktopName;
@@ -204,7 +205,10 @@ stdenv.mkDerivation rec {
     makeWrapper $out/opt/yandex/${folderName}/${binName} "$out/bin/${pname}" \
       --set "LD_LIBRARY_PATH" "${lib.concatStringsSep ":" runtimeDependencies}" \
       --add-flags ${lib.escapeShellArg "--use-gl=desktop --enable-features=VaapiVideoDecoder,VaapiVideoEncoder"} \
-      --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --enable-features=WaylandWindowDecorations}}"
+      --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --enable-features=WaylandWindowDecorations}}
+      ${optionalString vulkanSupport ''
+      --prefix XDG_DATA_DIRS  : "${addOpenGLRunpath.driverLink}/share"
+      ''}"
     ln -s ${codecs}/lib/libffmpeg.so $out/opt/yandex/${folderName}/libffmpeg.so
     ln -s ${codecs}/codecs_checksum $out/opt/yandex/${folderName}/codecs_checksum
     mkdir -p $out/opt/yandex/${folderName}/Extensions
