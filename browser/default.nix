@@ -1,71 +1,24 @@
 { pname, version, hash, url }:
 
-{ stdenv
-, lib
-, fetchurl
-, autoPatchelfHook
-, wrapGAppsHook
-, flac
-, gnome2
-, harfbuzzFull
-, nss
-, snappy
-, xdg-utils
-, xorg
-, alsa-lib
-, atk
-, cairo
-, cups
-, curl
-, dbus
-, squashfsTools
-, expat
-, fontconfig
-, freetype
-, gdk-pixbuf
-, glib
-, gst_all_1
-, gtk3
-, libX11
-, libxcb
-, libXScrnSaver
-, libXcomposite
-, libXcursor
-, libXdamage
-, libXext
-, libXfixes
-, libXi
-, libXrandr
-, libXrender
-, libXtst
-, libdrm
-, libnotify
-, libopus
-, libpulseaudio
-, libuuid
-, libva
-, libxshmfence
-, mesa
-, nspr
-, pango
-, systemd
-, at-spi2-atk
-, at-spi2-core
-, xxd
-
-, vulkan-loader, libGL, pciutils
-
-, makeWrapper
-, extensions ? [ ]
-}:
+{ stdenv, lib, fetchurl, autoPatchelfHook, wrapGAppsHook3, flac, gnome2
+, harfbuzzFull, nss, snappy, xdg-utils, xorg, alsa-lib, atk, cairo, cups, curl
+, dbus, expat, fontconfig, freetype, gdk-pixbuf, glib, gtk3, libX11, libxcb
+, libXScrnSaver, libXcomposite, libXcursor, libXdamage, libXext, libXfixes
+, libXi, libXrandr, libXrender, libXtst, libdrm, libnotify, libopus, libva
+, libpulseaudio, libuuid, libxshmfence, mesa, nspr, pango, systemd, at-spi2-atk
+, at-spi2-core, libqt5pas, qt6, xxd, vulkan-loader, libGL, pciutils, makeWrapper
+, gst_all_1, wrapGAppsHook, squashfsTools, vivaldi-ffmpeg-codecs
+, extensions ? [ ] }:
 
 let
-  desktopName = if pname == "yandex-browser-stable" then "yandex-browser" else pname;
-  folderName = if pname == "yandex-browser-stable" then "browser" else "browser-beta";
+  desktopName =
+    if pname == "yandex-browser-stable" then "yandex-browser" else pname;
+  folderName =
+    if pname == "yandex-browser-stable" then "browser" else "browser-beta";
   binName = desktopName;
 
-  codecsAttrs = builtins.fromJSON
-    (builtins.readFile (../meta + "/${pname}-codecs.json"));
+  codecsAttrs =
+    builtins.fromJSON (builtins.readFile (../meta + "/${pname}-codecs.json"));
 
   codecs = stdenv.mkDerivation rec {
     pname = "chromium-codecs-ffmpeg-extra";
@@ -101,12 +54,11 @@ let
     let
       split = lib.splitString ";" id;
       id' = lib.elemAt split 0;
-      updateUrl =
-        if lib.length split > 1
-        then lib.elemAt split 1
-        else "https://clients2.google.com/service/update2/crx";
-    in
-    ''
+      updateUrl = if lib.length split > 1 then
+        lib.elemAt split 1
+      else
+        "https://clients2.google.com/service/update2/crx";
+    in ''
       cat > $out/opt/yandex/${folderName}/Extensions/${id'}.json <<EOF
       {
         "external_update_url": "${updateUrl}"
@@ -114,19 +66,13 @@ let
       EOF
     '';
 
-in
-stdenv.mkDerivation rec {
+in stdenv.mkDerivation rec {
   inherit pname version;
 
-  src = fetchurl {
-    inherit url hash;
-  };
+  src = fetchurl { inherit url hash; };
 
-  nativeBuildInputs = [
-    autoPatchelfHook
-    wrapGAppsHook
-    makeWrapper
-  ];
+  nativeBuildInputs =
+    [ autoPatchelfHook qt6.wrapQtAppsHook wrapGAppsHook makeWrapper ];
 
   buildInputs = [
     flac
@@ -194,9 +140,14 @@ stdenv.mkDerivation rec {
        --replace "Exec=$out/bin/${pname}" "Exec=$out/bin/${pname} %U"
     yaBinary=$out/opt/yandex/${folderName}/${binName}
     chmod +x $yaBinary
-    patchelf --set-rpath "${lib.makeLibraryPath [ libGL vulkan-loader pciutils ]}:$(patchelf --print-rpath "$yaBinary")" "$yaBinary"
+    patchelf --set-rpath "${
+      lib.makeLibraryPath [ libGL vulkan-loader pciutils ]
+    }:$(patchelf --print-rpath "$yaBinary")" "$yaBinary"
     makeWrapper $out/opt/yandex/${folderName}/${binName} "$out/bin/${pname}" \
-      --add-flags ${lib.escapeShellArg "--enable-features=VaapiVideoDecoder,VaapiVideoEncoder"} \
+      --add-flags ${
+        lib.escapeShellArg
+        "--enable-features=VaapiVideoDecoder,VaapiVideoEncoder"
+      } \
       --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --enable-features=WaylandWindowDecorations}}"
     ln -s ${codecs}/lib/libffmpeg.so $out/opt/yandex/${folderName}/libffmpeg.so
     ln -s ${codecs}/codecs_checksum $out/opt/yandex/${folderName}/codecs_checksum
@@ -204,12 +155,8 @@ stdenv.mkDerivation rec {
     ${lib.concatMapStringsSep "\n" extensionJsonScript extensions}
   '';
 
-  runtimeDependencies = map lib.getLib [
-    libpulseaudio
-    curl
-    systemd
-    codecs
-  ] ++ buildInputs;
+  runtimeDependencies = map lib.getLib [ libpulseaudio curl systemd codecs ]
+    ++ buildInputs;
 
   meta = with lib; {
     description = "Yandex Web Browser";
@@ -218,11 +165,9 @@ stdenv.mkDerivation rec {
     sourceProvenance = with sourceTypes; [ binaryNativeCode ];
     platforms = [ "x86_64-linux" ];
 
-    knownVulnerabilities = [
-      ''
-        Trusts a Russian government issued CA certificate for some websites.
-        See https://habr.com/en/company/yandex/blog/655185/ for details.
-      ''
-    ];
+    knownVulnerabilities = [''
+      Trusts a Russian government issued CA certificate for some websites.
+      See https://habr.com/en/company/yandex/blog/655185/ for details.
+    ''];
   };
 }
